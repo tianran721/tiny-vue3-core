@@ -3,7 +3,7 @@ import {effect} from "../effect";
 
 describe('effect', () => {
     it('happy path', function () {
-        // init
+        // 创建响应式依赖
         const user = reactive({
             age: 10
         });
@@ -13,8 +13,8 @@ describe('effect', () => {
         });
         expect(nextAge).toBe(11);
         // update
-       /* user.age++
-        expect(nextAge).toBe(12);*/
+        user.age++
+        expect(nextAge).toBe(12);
     });
 
 })
