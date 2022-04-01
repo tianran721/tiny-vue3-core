@@ -1,7 +1,9 @@
 class ReactiveEffect {
 	private _fn: any;
-	constructor(fn) {
+	private scheduler: Function | undefined;
+	constructor(fn,scheduler?: Function) {
 		this._fn = fn;
+		this.scheduler = scheduler;
 	}
 	run() {
 		activeEffect = this;
@@ -26,17 +28,28 @@ export function track(target, key) {
 	// reactiveEffect
 	dep.add(activeEffect);
 }
+
 export function trigger(target, key) {
 	let depsMap = targetMap.get(target);
 	let dep = depsMap.get(key);
 	// effect : reactiveEffect
 	for (const effect of dep) {
-		effect.run();
+		// 触发依赖前先判断
+		if(effect.scheduler){
+			effect.scheduler()
+		}else{
+			effect.run();
+		}
 	}
 }
+type effectOptions = {
+	scheduler? : Function
+}
+
 let activeEffect;
-export function effect(fn) {
-	const _effect = new ReactiveEffect(fn);
+// 添加scheduler 可选
+export function effect(fn,options:effectOptions={}) {
+	const _effect = new ReactiveEffect(fn,options.scheduler);
 	_effect.run();
 	const runner = _effect.run.bind(_effect);
 	// 返回run
