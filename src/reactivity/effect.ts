@@ -5,7 +5,8 @@ class ReactiveEffect {
 	}
 	run() {
 		activeEffect = this;
-		this._fn();
+		// effect 回调的返回值
+		return this._fn();
 	}
 }
 // target=>map
@@ -35,7 +36,9 @@ export function trigger(target, key) {
 }
 let activeEffect;
 export function effect(fn) {
-	// 触发fn
 	const _effect = new ReactiveEffect(fn);
 	_effect.run();
+	const runner = _effect.run.bind(_effect);
+	// 返回run
+	return runner;
 }
