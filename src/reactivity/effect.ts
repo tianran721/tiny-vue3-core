@@ -1,6 +1,12 @@
+import {extend} from "./index";
+
 class ReactiveEffect {
 	private _fn: any;
 	private scheduler: Function | undefined;
+	onStop?:() => void;
+	// 这么写是定义实例属性 active
+	active = true;
+	deps = [];
 	constructor(fn,scheduler?: Function) {
 		this._fn = fn;
 		this.scheduler = scheduler;
@@ -10,7 +16,25 @@ class ReactiveEffect {
 		// effect 回调的返回值
 		return this._fn();
 	}
+	//
+	stop(){
+		if(this.active){
+			cleanupEffect(this)
+			if(this.onStop){
+				this.onStop();
+			}
+			// cleanupEffect只做1次
+			this.active = false;
+		}
+	}
 }
+function cleanupEffect(effect){
+	// [ set ]
+	effect.deps.forEach(dep=>{
+		dep.delete(effect)
+	})
+}
+
 // target=>map
 const targetMap = new Map();
 export function track(target, key) {
@@ -27,6 +51,8 @@ export function track(target, key) {
 	}
 	// reactiveEffect
 	dep.add(activeEffect);
+	// [ set ]
+	activeEffect.deps.push(dep)
 }
 
 export function trigger(target, key) {
@@ -48,10 +74,19 @@ type effectOptions = {
 
 let activeEffect;
 // 添加scheduler 可选
-export function effect(fn,options:effectOptions={}) {
+export function effect(fn,options:any = {}) {
 	const _effect = new ReactiveEffect(fn,options.scheduler);
+	// 浅拷贝 _effect -> + onStop
+	extend(_effect,options)
 	_effect.run();
-	const runner = _effect.run.bind(_effect);
+	const runner:any = _effect.run.bind(_effect);
+	// runner上挂 reactiveEffect
+	runner.effect = _effect;
 	// 返回run
 	return runner;
+}
+
+export function stop(runner){
+	// 调用 effect 的 stop 方法
+	runner.effect.stop()
 }

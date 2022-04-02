@@ -1,8 +1,8 @@
 import {reactive} from "../reactive";
-import {effect} from "../effect";
+import {effect,stop} from "../effect";
 
 describe('effect', () => {
-    it('happy path', function () {
+    test('happy path', function () {
         const user = reactive({
             age: 10
         });
@@ -27,7 +27,7 @@ describe('effect', () => {
         expect(foo).toBe(2);
         expect(runner()).toBe(3);
     });
-    it("scheduler", () => {
+    test("scheduler", () => {
         let dummy;
         let run: any;
         const scheduler = jest.fn(() => {
@@ -51,5 +51,44 @@ describe('effect', () => {
         expect(dummy).toBe(1);
         run();
         expect(dummy).toBe(2);
+    });
+
+
+    test("stop", () => {
+        let dummy;
+        const obj = reactive({ prop: 1 });
+        const runner = effect(() => {
+            dummy = obj.prop;
+        });
+        obj.prop = 2;
+        expect(dummy).toBe(2);
+        // 调用stop后 => set 不更新
+        stop(runner);
+        obj.prop = 3;
+        expect(dummy).toBe(2);
+
+        runner();
+        expect(dummy).toBe(3);
+    });
+
+    test("onStop", () => {
+        const obj = reactive({
+            foo: 1,
+        });
+        const onStop = jest.fn(() => {
+            console.log('onStop')
+        });
+        let dummy;
+        const runner = effect(
+            () => {
+                dummy = obj.foo;
+            },
+            {
+                onStop,
+            }
+        );
+        // effect 可以接收onStop ,当调用stop时,回调onStop
+        stop(runner);
+        expect(onStop).toBeCalledTimes(1);
     });
 })
