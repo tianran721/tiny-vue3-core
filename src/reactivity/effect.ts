@@ -49,6 +49,7 @@ export function track(target, key) {
 		dep = new Set();
 		depsMap.set(key, dep);
 	}
+	if (!activeEffect) return;
 	// reactiveEffect
 	dep.add(activeEffect);
 	// [ set ]
