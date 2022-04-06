@@ -1,11 +1,14 @@
 import {extend} from "./index";
-
+let activeEffect;
+let shouldTrack = false;
 class ReactiveEffect {
 	private _fn: any;
 	private scheduler: Function | undefined;
 	onStop?:() => void;
 	// 这么写是定义实例属性 active
+	// active 记录 dep里 有 没有 activeEffect 可以删除, 默认是有的
 	active = true;
+	// deps 保存 dep ,dep里保存activeEffect
 	deps = [];
 	constructor(fn,scheduler?: Function) {
 		this._fn = fn;
@@ -21,15 +24,17 @@ class ReactiveEffect {
 		if(this.active){
 			cleanupEffect(this)
 			if(this.onStop){
+				// 回调 onStop 函数
 				this.onStop();
 			}
-			// cleanupEffect只做1次
+			// 删除activeEffect后,将active置为false
+			// 当第二次 执行stop时,就不会重复执行
 			this.active = false;
 		}
 	}
 }
+// 遍历 deps , 删除 activeEffect
 function cleanupEffect(effect){
-	// [ set ]
 	effect.deps.forEach(dep=>{
 		dep.delete(effect)
 	})
@@ -37,6 +42,7 @@ function cleanupEffect(effect){
 
 // target=>map
 const targetMap = new Map();
+
 export function track(target, key) {
 	let depsMap = targetMap.get(target);
 	if (!depsMap) {
@@ -49,10 +55,11 @@ export function track(target, key) {
 		dep = new Set();
 		depsMap.set(key, dep);
 	}
+	// 单纯触发 track 时, effect函数没有调用, activeEffect 是undefined,不是[],这种情况直接结束函数
 	if (!activeEffect) return;
 	// reactiveEffect
 	dep.add(activeEffect);
-	// [ set ]
+	// 将dep push 到 []
 	activeEffect.deps.push(dep)
 }
 
@@ -73,11 +80,10 @@ type effectOptions = {
 	scheduler? : Function
 }
 
-let activeEffect;
 // 添加scheduler 可选
 export function effect(fn,options:any = {}) {
 	const _effect = new ReactiveEffect(fn,options.scheduler);
-	// 浅拷贝 _effect -> + onStop
+	// 浅拷贝-> 把options 里的一项项 复制到 _effect
 	extend(_effect,options)
 	_effect.run();
 	const runner:any = _effect.run.bind(_effect);

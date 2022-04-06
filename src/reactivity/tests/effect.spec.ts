@@ -60,11 +60,14 @@ describe('effect', () => {
         const runner = effect(() => {
             dummy = obj.prop;
         });
+
         obj.prop = 2;
         expect(dummy).toBe(2);
         // 调用stop后 => set 不更新
         stop(runner);
-        obj.prop = 3;
+        // obj.prop = 3;
+
+        obj.prop++
         expect(dummy).toBe(2);
 
         runner();
