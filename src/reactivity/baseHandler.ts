@@ -1,13 +1,13 @@
-import { isObject } from "./index";
+import { isObject,extend } from "./index";
 import {track, trigger} from "./effect"
-import {ReactiveFlags, readonly,reactive} from "./reactive";
+import {ReactiveFlags, readonly,reactive ,shallowReadonly} from "./reactive";
 // 一上来就创建 get等, 给mutableHandlers等,以后每次使用get应用,而不是重复调用方法
 const get = createGetter();
 const set = createSetter();
 const readonlyGet = createGetter(true)
+const shallowReadonlyGet = createGetter(true, true);
 
-
-function createGetter(isReadonly = false){
+function createGetter(isReadonly = false,shallow = false){
     // proxy.key => 你.谁, key就是谁
     // ? target是谁 target 是 普通obj,是代理前的原对象, key是原对象.的prop
    return function get(target,key){
@@ -21,9 +21,15 @@ function createGetter(isReadonly = false){
 
        let res = Reflect.get(target,key)
        // TODO
+       if (shallow) {
+           return res;
+       }
+
        if (isObject(res)) {
            return isReadonly ? readonly(res) : reactive(res);
        }
+
+
 
 
 
@@ -60,3 +66,7 @@ export const readonlyHandlers = {
         return true;
     }
 }
+
+export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+    get: shallowReadonlyGet,
+});
