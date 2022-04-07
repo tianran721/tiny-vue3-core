@@ -73,35 +73,33 @@ export function track(target, key) {
 		dep = new Set();
 		depsMap.set(key, dep);
 	}
+	trackEffects(dep);
 
 
-	// 加判断,如果activeEffect 在set容器里了,就不再 push了
-	// 第一次track,不走
+}
+export function trackEffects(dep){
 	if(dep.has(activeEffect)) return
 
-	// dep-> set : 里面塞 activeEffect(new 的实例)
 	dep.add(activeEffect);
-	// 将装有实例的set, push 到 实例的deps中
-	// 收集依赖时,把set容器push到实例的deps
 	activeEffect.deps.push(dep)
 }
 
-function isTracking(){
+export function isTracking(){
 	return shouldTrack && activeEffect !== undefined
 }
-
-export function trigger(target, key) {
-	let depsMap = targetMap.get(target);
-	let dep = depsMap.get(key);
-	// for of 遍历 set
+export function triggerEffects(dep) {
 	for (const effect of dep) {
-		// 触发依赖前先判断
-		if(effect.scheduler){
-			effect.scheduler()
-		}else{
+		if (effect.scheduler) {
+			effect.scheduler();
+		} else {
 			effect.run();
 		}
 	}
+}
+export function trigger(target, key) {
+	let depsMap = targetMap.get(target);
+	let dep = depsMap.get(key);
+	triggerEffects(dep);
 }
 type effectOptions = {
 	scheduler? : Function
