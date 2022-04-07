@@ -7,7 +7,8 @@ class ReactiveEffect {
 	private scheduler: Function | undefined;
 	onStop?:() => void;
 	// 这么写是定义实例属性 active
-	// active 记录 dep(set)里 有 没有 实例(activeEffect) 可以删除, 默认是有的(因为单测中有创建代理和track的操作)
+	// active 记录 dep(set)里 有 没有 实例(activeEffect) 可以删除, 默认是true,表示可以往deps添加set(因为单侧fn中会触发代理的get操作,将实例保存到set容器)
+	// active 别名叫 isCouldDelEffect 我觉得还行
 	active = true;
 	// 将来会被push set容器(里面装实例)
 	deps = [];
@@ -16,11 +17,21 @@ class ReactiveEffect {
 		this.scheduler = scheduler;
 	}
 	run() {
+
+		// 只有调用了stop,isCouldDelEffect变false, 直接调用fn,此时 shouldTrack 还是默认的false/被重置为false
+		if(!this.active){
+			return this._fn();
+		}
+		// 开启 shouldTrack, 下调用 fn , 调用后 将shouldTrack 重置为false
+		shouldTrack = true;
 		activeEffect = this;
-		// effect 回调的返回值
-		return this._fn();
+
+		// 调用fn -> 触发 get
+		const r = this._fn();
+		// shouldTrack 重置为false, 如果调用了stop, 此时shouldTrack状态为false了
+		shouldTrack = false;
+		return r;
 	}
-	//
 	stop(){
 		if(this.active){
 			cleanupEffect(this)
@@ -38,12 +49,18 @@ function cleanupEffect(effect){
 	effect.deps.forEach(dep=>{
 		dep.delete(effect)
 	})
+	// 清空 deps
+	effect.deps.length = 0;
 }
 
 // targetMap 容器: {原对象=>map}
 const targetMap = new Map();
 
 export function track(target, key) {
+	// 1.第一次收集依赖时,isTracking() 返回true , ,不走
+	// 2.调用完stop后 ,代理触发get, isTracking()返回false
+	if(!isTracking()) return
+
 	// 感觉depsMap 叫 keyMap 更好理解
 	let depsMap = targetMap.get(target);
 	if (!depsMap) {
@@ -56,27 +73,21 @@ export function track(target, key) {
 		dep = new Set();
 		depsMap.set(key, dep);
 	}
-	// 单纯触发 track 时, effect函数没有调用, activeEffect 是undefined,不是[],这种情况直接结束函数
-	if (!activeEffect) return;
-	// TODO :
 
 
-
-
-
-
-
-
-
-
-
-
+	// 加判断,如果activeEffect 在set容器里了,就不再 push了
+	// 第一次track,不走
+	if(dep.has(activeEffect)) return
 
 	// dep-> set : 里面塞 activeEffect(new 的实例)
 	dep.add(activeEffect);
 	// 将装有实例的set, push 到 实例的deps中
 	// 收集依赖时,把set容器push到实例的deps
 	activeEffect.deps.push(dep)
+}
+
+function isTracking(){
+	return shouldTrack && activeEffect !== undefined
 }
 
 export function trigger(target, key) {
@@ -101,7 +112,9 @@ export function effect(fn,options:any = {}) {
 	const _effect = new ReactiveEffect(fn,options.scheduler);
 	// 浅拷贝-> 把options 里的一项项 复制到 _effect
 	extend(_effect,options)
+	// run()时,会调用fn
 	_effect.run();
+	//
 	const runner:any = _effect.run.bind(_effect);
 	// runner上挂 reactiveEffect
 	runner.effect = _effect;

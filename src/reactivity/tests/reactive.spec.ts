@@ -12,4 +12,5 @@ describe('reactive', () => {
         // 不触发get,value.xxx 返回false
         expect(isReactive(original)).toBe(false);
     });
+
 })

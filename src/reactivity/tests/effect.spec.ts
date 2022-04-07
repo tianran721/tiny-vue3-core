@@ -18,13 +18,16 @@ describe('effect', () => {
 
     it("should return runner when call effect", () => {
         let foo = 0;
+        //
         const runner = effect(() => {
             foo++;
             return foo;
         });
         expect(foo).toBe(1);
+        // runner() 是直接调用 run方法, fn的返回值就是 runner()的返回值
         runner();
         expect(foo).toBe(2);
+        // runner()直接调用run, run()的返回值,就是fn的返回值
         expect(runner()).toBe(3);
     });
     test("scheduler", () => {
@@ -62,7 +65,7 @@ describe('effect', () => {
         * effect调用后:
         *   1.new 了个实例,
         *   2.将fn挂到实例上
-        *   3.调用run方法,回调fn
+        *   3.调用run方法,回调fn -> 触发代理的get -> 第一次收集依赖 ->
         *   4.返回run方法的引用 runner
         *   5.runner上挂载了实例
         * */
@@ -76,11 +79,13 @@ describe('effect', () => {
 
         // 调用stop, 触发 实例 上的stop方法 -> 删除deps里set容器中的实例
         stop(runner);
-        // TODO:
-
+        /*
         //  proxyObj.prop++  等价于 proxyObj.prop = proxyObj.prop + 1 , 触发了get和set
-        //  先触发 代理的get(第二次触发get)
-        proxyObj.prop++
+        //  先触发 代理的get(第二次触发get),重新收集了依赖,在 set 是触发依赖 , 导致dummy为3
+        // 1.此时是调用了stop 后触发get , shouldTrack为false active为false,track中 直接return掉
+        // 2.触发set,调用run 方法,此时active为false,直接调用fn,触发track,直接return掉*/
+         proxyObj.prop++
+        expect(proxyObj.prop).toBe(3);
         // 测试未通过 得到3的 原因:  proxyObj.prop++ 先(重新)收集可依赖,又push了dep到实例的deps中,再触发依赖回调fn ,所有dummy为3
         expect(dummy).toBe(2);
 
