@@ -12,5 +12,18 @@ describe('reactive', () => {
         // 不触发get,value.xxx 返回false
         expect(isReactive(original)).toBe(false);
     });
-
+    test('nested reactive', () => {
+        let original = {
+            nested:{
+                foo:1
+            },
+            array:[
+                { bar:2 }
+            ]
+        }
+        let observed = reactive(original);
+        expect(isReactive(observed.nested)).toBe(true)
+        expect(isReactive(observed.array)).toBe(true)
+        expect(isReactive(observed.array[0])).toBe(true)
+    })
 })

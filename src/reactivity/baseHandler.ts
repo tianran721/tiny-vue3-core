@@ -1,5 +1,6 @@
+import { isObject } from "./index";
 import {track, trigger} from "./effect"
-import {ReactiveFlags} from "./reactive";
+import {ReactiveFlags, readonly,reactive} from "./reactive";
 // 一上来就创建 get等, 给mutableHandlers等,以后每次使用get应用,而不是重复调用方法
 const get = createGetter();
 const set = createSetter();
@@ -19,6 +20,13 @@ function createGetter(isReadonly = false){
        }
 
        let res = Reflect.get(target,key)
+       // TODO
+       if (isObject(res)) {
+           return isReadonly ? readonly(res) : reactive(res);
+       }
+
+
+
 
        // readonly的响应式对象,不会track收集依赖,因为不会触发,不需要收集
        if(!isReadonly){
