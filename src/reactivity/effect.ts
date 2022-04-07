@@ -1,14 +1,15 @@
 import {extend} from "./index";
 let activeEffect;
+// shouldTrack控制是否应该收集依赖
 let shouldTrack = false;
 class ReactiveEffect {
 	private _fn: any;
 	private scheduler: Function | undefined;
 	onStop?:() => void;
 	// 这么写是定义实例属性 active
-	// active 记录 dep里 有 没有 activeEffect 可以删除, 默认是有的
+	// active 记录 dep(set)里 有 没有 实例(activeEffect) 可以删除, 默认是有的(因为单测中有创建代理和track的操作)
 	active = true;
-	// deps 保存 dep ,dep里保存activeEffect
+	// 将来会被push set容器(里面装实例)
 	deps = [];
 	constructor(fn,scheduler?: Function) {
 		this._fn = fn;
@@ -24,32 +25,32 @@ class ReactiveEffect {
 		if(this.active){
 			cleanupEffect(this)
 			if(this.onStop){
-				// 回调 onStop 函数
+				// 回调 onStop
 				this.onStop();
 			}
-			// 删除activeEffect后,将active置为false
-			// 当第二次 执行stop时,就不会重复执行
+			// 删除activeEffect一次就够了,将active置为false,当再调用stop时,就不会重复执行cleanupEffect逻辑
 			this.active = false;
 		}
 	}
 }
-// 遍历 deps , 删除 activeEffect
 function cleanupEffect(effect){
+	// 遍历数组deps,拿到set容器, 删掉容器里的实例
 	effect.deps.forEach(dep=>{
 		dep.delete(effect)
 	})
 }
 
-// target=>map
+// targetMap 容器: {原对象=>map}
 const targetMap = new Map();
 
 export function track(target, key) {
+	// 感觉depsMap 叫 keyMap 更好理解
 	let depsMap = targetMap.get(target);
 	if (!depsMap) {
 		depsMap = new Map();
 		targetMap.set(target, depsMap);
 	}
-	// key => set
+	// depsMap 容器: {原对象.的key => set }
 	let dep = depsMap.get(key);
 	if (!dep) {
 		dep = new Set();
@@ -57,16 +58,31 @@ export function track(target, key) {
 	}
 	// 单纯触发 track 时, effect函数没有调用, activeEffect 是undefined,不是[],这种情况直接结束函数
 	if (!activeEffect) return;
-	// reactiveEffect
+	// TODO :
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// dep-> set : 里面塞 activeEffect(new 的实例)
 	dep.add(activeEffect);
-	// 将dep push 到 []
+	// 将装有实例的set, push 到 实例的deps中
+	// 收集依赖时,把set容器push到实例的deps
 	activeEffect.deps.push(dep)
 }
 
 export function trigger(target, key) {
 	let depsMap = targetMap.get(target);
 	let dep = depsMap.get(key);
-	// effect : reactiveEffect
+	// for of 遍历 set
 	for (const effect of dep) {
 		// 触发依赖前先判断
 		if(effect.scheduler){

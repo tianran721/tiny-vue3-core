@@ -8,6 +8,7 @@ const readonlyGet = createGetter(true)
 
 function createGetter(isReadonly = false){
     // proxy.key => 你.谁, key就是谁
+    // ? target是谁 target 是 普通obj,是代理前的原对象, key是原对象.的prop
    return function get(target,key){
        // 如果 proxy.xxx, 走这段逻辑 ,isReactive,isReadonly才会走这段逻辑
        // 如果点的是 ReactiveFlags.IS_xxx
@@ -21,6 +22,7 @@ function createGetter(isReadonly = false){
 
        // readonly的响应式对象,不会track收集依赖,因为不会触发,不需要收集
        if(!isReadonly){
+           // 传入代理前的原对象,和原对象.的prop
            track(target,key)
        }
        return res;
