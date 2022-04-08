@@ -1,4 +1,4 @@
-import { isObject,extend } from "./index";
+import { isObject,extend } from "../shared";
 import {track, trigger} from "./effect"
 import {ReactiveFlags, readonly,reactive ,shallowReadonly} from "./reactive";
 // 一上来就创建 get等, 给mutableHandlers等,以后每次使用get应用,而不是重复调用方法

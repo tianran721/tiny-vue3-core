@@ -1,4 +1,4 @@
-import {extend} from "./index";
+import {extend} from "../shared";
 let activeEffect;
 // shouldTrack控制是否应该收集依赖
 let shouldTrack = false;
