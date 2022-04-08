@@ -2,7 +2,7 @@ import {extend} from "./index";
 let activeEffect;
 // shouldTrack控制是否应该收集依赖
 let shouldTrack = false;
-class ReactiveEffect {
+export class ReactiveEffect {
 	private _fn: any;
 	private scheduler: Function | undefined;
 	onStop?:() => void;

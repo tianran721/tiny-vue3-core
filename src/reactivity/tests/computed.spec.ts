@@ -1,0 +1,44 @@
+import { computed } from "../computed";
+import { reactive } from "../reactive";
+// 缓存
+describe("computed", () => {
+    it("happy path", () => {
+        const user = reactive({
+            age: 1,
+        });
+
+        const age = computed(() => {
+            return user.age;
+        });
+
+        expect(age.value).toBe(1);
+    });
+
+    it("should compute lazily", () => {
+        const value = reactive({
+            foo: 1,
+        });
+        const getter = jest.fn(() => {
+            return value.foo;
+        });
+        const cValue = computed(getter);
+        // 如果没有指向cValue.value , getter不会调用 : 懒执行
+        expect(getter).not.toHaveBeenCalled();
+
+        expect(cValue.value).toBe(1);
+        expect(getter).toHaveBeenCalledTimes(1);
+
+        // 测试缓存
+        cValue.value;
+        expect(getter).toHaveBeenCalledTimes(1);
+
+        value.foo = 2;
+        expect(getter).toHaveBeenCalledTimes(1);
+
+        expect(cValue.value).toBe(2);
+        expect(getter).toHaveBeenCalledTimes(2);
+
+        cValue.value;
+        expect(getter).toHaveBeenCalledTimes(2);
+    });
+});
