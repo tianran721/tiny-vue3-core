@@ -1,15 +1,13 @@
 import { createComponentInstance, setupComponent } from "./component";
 import { isObject } from "../shared/index";
+
 export function render(vnode, container) {
-    // 修补
+    // 修补 进一步封装下
     patch(vnode, container);
 }
 
+// 判断vnode的类型
 function patch(vnode, container) {
-    // TODO 判断vnode 是不是一个 element
-    // 是 element 那么就应该处理 element
-    // 思考题： 如何去区分是 element 还是 component 类型呢？
-    // processElement();
     if (typeof vnode.type === "string") {
         processElement(vnode, container);
     }
@@ -17,14 +15,17 @@ function patch(vnode, container) {
         processComponent(vnode, container);
     }
 }
+
 function processElement(vnode, container) {
     mountElement(vnode, container);
 }
+
 function processComponent(vnode: any, container: any) {
     mountComponent(vnode, container);
 }
 
 function mountComponent(vnode: any, container) {
+    // 根据vnode 返回一个组件实例,上面挂载了很多属性(包括vnode)
     const instance = createComponentInstance(vnode);
 
     setupComponent(instance);

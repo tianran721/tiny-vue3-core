@@ -1,3 +1,4 @@
+
 export function createComponentInstance(vnode) {
     const component = {
         vnode,
@@ -7,14 +8,19 @@ export function createComponentInstance(vnode) {
     return component;
 }
 
+
 export function setupComponent(instance) {
     // TODO
     // initProps()
     // initSlots()
+
+    // 封装一下
     setupStatefulComponent(instance);
 }
 // 初始化有状态组件
 function setupStatefulComponent(instance: any) {
+    // 主逻辑是去调用setup,拿到返回值 -> 就需要拿到根组件的配置
+
     const Component = instance.type;
 
     const { setup } = Component;
