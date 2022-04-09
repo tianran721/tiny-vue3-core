@@ -8,6 +8,7 @@ export function createApp(rootComponent) {
             // vue3 先将根组件转为vnode
             // 之后基于vnode进行操作
             // 实质上h函数就是 createVNode ,  能在未来生成html的js
+            // TODO vnode
             const vnode = createVNode(rootComponent);
 
             // 进一步处理 封一下

@@ -1,5 +1,5 @@
-import { createComponentInstance, setupComponent } from "./component";
-import { isObject } from "../shared/index";
+import {createComponentInstance, setupComponent} from "./component";
+import {isObject} from "../shared/index";
 
 export function render(vnode, container) {
     // 修补 进一步封装下
@@ -10,8 +10,7 @@ export function render(vnode, container) {
 function patch(vnode, container) {
     if (typeof vnode.type === "string") {
         processElement(vnode, container);
-    }
-    else if (isObject(vnode.type)) {
+    } else if (isObject(vnode.type)) {
         processComponent(vnode, container);
     }
 }
@@ -24,41 +23,49 @@ function processComponent(vnode: any, container: any) {
     mountComponent(vnode, container);
 }
 
-function mountComponent(vnode: any, container) {
-    // 根据vnode 返回一个组件实例,上面挂载了很多属性(包括vnode)
-    const instance = createComponentInstance(vnode);
+function mountComponent(initialVNode: any, container) {
+    // TODO 创建真正组件实例
+    const instance = createComponentInstance(initialVNode);
 
     setupComponent(instance);
 
-    setupRenderEffect(instance, container);
+    setupRenderEffect(instance, initialVNode, container);
 }
 
 function mountElement(vnode, container) {
-    var el = document.createElement(vnode.type);
-    var children = vnode.children;
+    // el: 是组件根节点
+    const el = (vnode.el = document.createElement(vnode.type));
+    let children = vnode.children;
     // children
+
     if (typeof children === "string") {
         el.textContent = children;
-    }
-    else if (Array.isArray(children)) {
+    } else if (Array.isArray(children)) {
         mountChildren(vnode, el);
     }
     // props
-    var props = vnode.props;
-    for (var key in props) {
-        var val = props[key];
+    let props = vnode.props;
+    for (let key in props) {
+        let val = props[key];
         el.setAttribute(key, val);
     }
     container.append(el);
 }
 
 
-function  mountChildren(vnode, container) {
+function mountChildren(vnode, container) {
     vnode.children.forEach(function (v) {
         patch(v, container);
     });
 }
-function setupRenderEffect(instance: any, container) {
-    const subTree = instance.render();
+
+function setupRenderEffect(instance, initialVNode, container) {
+    const { proxy } = instance;
+    // todo subTree
+    const subTree = instance.render.call(proxy);
+    // patch完 所有 subTree出初始化完成
     patch(subTree, container);
+
+    // TODO *
+    initialVNode.el = subTree.el;
 }
