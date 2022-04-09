@@ -1,4 +1,6 @@
 import {PublicInstanceProxyHandlers} from "./componentPublicInstance";
+import {shallowReadonly} from "../reactivity/reactive";
+import {initProps} from "./componentProps";
 
 export function createComponentInstance(vnode) {
     const component = {
@@ -8,15 +10,17 @@ export function createComponentInstance(vnode) {
         type: vnode.type,
         setupState: {},
         proxy: null,
-        render:null
+        render: null,
+        props: {},
     };
     return component;
 }
 
 
 export function setupComponent(instance) {
+
+    initProps(instance, instance.vnode.props);
     // TODO
-    // initProps()
     // initSlots()
 
     // 封装一下
@@ -34,11 +38,12 @@ function setupStatefulComponent(instance) {
     const {setup} = Component;
 
     if (setup) {
-        const setupResult = setup();
+        const setupResult = setup(shallowReadonly(instance.props));
 
         handleSetupResult(instance, setupResult);
     }
 }
+
 // handleSetupResult,finishComponentSetup : 就是把用户定义的setup(),render挂到框架定义的instance上
 function handleSetupResult(instance, setupResult: any) {
     // 返回值可能是 function | Object

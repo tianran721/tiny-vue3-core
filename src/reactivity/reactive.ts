@@ -1,4 +1,5 @@
-import {mutableHandlers, readonlyHandlers,shallowReadonlyHandlers} from './baseHandler'
+import {mutableHandlers, readonlyHandlers, shallowReadonlyHandlers} from './baseHandler'
+import {isObject} from "../shared/index";
 
 export const enum ReactiveFlags {
     IS_REACTIVE = "__v_isReactive",
@@ -13,12 +14,18 @@ export function reactive(raw) {
 export function readonly(raw) {
     return createReactiveObject(raw, readonlyHandlers)
 }
+
 export function shallowReadonly(raw) {
     return createReactiveObject(raw, shallowReadonlyHandlers);
 }
+
 // target 是 普通obj
 // baseHandlers 为 mutableHandlers/readonlyHandlers
 function createReactiveObject(target, baseHandlers) {
+    if (!isObject(target)) {
+        console.warn(`target ${target} 必须是一个对象`);
+        return target
+    }
     return new Proxy(target, baseHandlers);
 }
 
@@ -32,6 +39,7 @@ export function isReactive(value) {
 export function isReadonly(value) {
     return !!value[ReactiveFlags.IS_READONLY]
 }
+
 export function isProxy(value) {
     return isReactive(value) || isReadonly(value);
 }

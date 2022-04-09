@@ -1,5 +1,4 @@
 import {createComponentInstance, setupComponent} from "./component";
-import {isObject} from "../shared/index";
 import {ShapeFlags} from "../shared/ShapeFlags";
 
 export function render(vnode, container) {
@@ -9,12 +8,11 @@ export function render(vnode, container) {
 
 // 判断vnode的类型
 function patch(vnode, container) {
-    const { shapeFlag } = vnode;
+    const {shapeFlag} = vnode;
     // 获取
     if (shapeFlag & ShapeFlags.ELEMENT) {
         processElement(vnode, container);
-    }
-    else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    } else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
         processComponent(vnode, container);
     }
 }
@@ -39,13 +37,12 @@ function mountComponent(initialVNode: any, container) {
 function mountElement(vnode, container) {
     // el: 是组件根节点
     const el = (vnode.el = document.createElement(vnode.type));
-    const { children, shapeFlag } = vnode;
+    const {children, shapeFlag} = vnode;
     // children
 
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children;
-    }
-    else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         mountChildren(vnode, el);
     }
     // props
@@ -71,7 +68,7 @@ function mountChildren(vnode, container) {
 }
 
 function setupRenderEffect(instance, initialVNode, container) {
-    const { proxy } = instance;
+    const {proxy} = instance;
     // todo subTree
     const subTree = instance.render.call(proxy);
     // patch完 所有 subTree出初始化完成
