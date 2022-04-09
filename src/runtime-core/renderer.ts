@@ -1,5 +1,6 @@
 import {createComponentInstance, setupComponent} from "./component";
 import {isObject} from "../shared/index";
+import {ShapeFlags} from "../shared/ShapeFlags";
 
 export function render(vnode, container) {
     // 修补 进一步封装下
@@ -8,9 +9,12 @@ export function render(vnode, container) {
 
 // 判断vnode的类型
 function patch(vnode, container) {
-    if (typeof vnode.type === "string") {
+    const { shapeFlag } = vnode;
+    // 获取
+    if (shapeFlag & ShapeFlags.ELEMENT) {
         processElement(vnode, container);
-    } else if (isObject(vnode.type)) {
+    }
+    else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
         processComponent(vnode, container);
     }
 }
@@ -35,12 +39,13 @@ function mountComponent(initialVNode: any, container) {
 function mountElement(vnode, container) {
     // el: 是组件根节点
     const el = (vnode.el = document.createElement(vnode.type));
-    let children = vnode.children;
+    const { children, shapeFlag } = vnode;
     // children
 
-    if (typeof children === "string") {
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children;
-    } else if (Array.isArray(children)) {
+    }
+    else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         mountChildren(vnode, el);
     }
     // props
