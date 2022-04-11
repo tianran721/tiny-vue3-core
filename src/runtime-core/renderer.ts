@@ -2,7 +2,6 @@ import {createComponentInstance, setupComponent} from "./component";
 import {ShapeFlags} from "../shared/ShapeFlags";
 
 export function render(vnode, container) {
-    // 修补 进一步封装下
     patch(vnode, container);
 }
 
@@ -29,7 +28,6 @@ function mountComponent(initialVNode: any, container) {
     const instance = createComponentInstance(initialVNode);
 
     setupComponent(instance);
-    // TODO
 
     setupRenderEffect(instance, initialVNode, container);
 }
@@ -37,14 +35,17 @@ function mountComponent(initialVNode: any, container) {
 function mountElement(vnode, container) {
     // el: 是组件根节点
     const el = (vnode.el = document.createElement(vnode.type));
+
     const {children, shapeFlag} = vnode;
     // children
 
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
         el.textContent = children;
-    } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+    }
+    else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         mountChildren(vnode, el);
     }
+    // todo
     // props
     let props = vnode.props;
     for (let key in props) {
@@ -68,12 +69,10 @@ function mountChildren(vnode, container) {
 }
 
 function setupRenderEffect(instance, initialVNode, container) {
-
     const {proxy} = instance;
     // subTree -> vnode
     const subTree = instance.render.call(proxy);
     // TODO
-
     patch(subTree, container);
 
     initialVNode.el = subTree.el;

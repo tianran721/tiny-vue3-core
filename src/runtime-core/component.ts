@@ -2,6 +2,7 @@ import {PublicInstanceProxyHandlers} from "./componentPublicInstance";
 import {shallowReadonly} from "../reactivity/reactive";
 import {initProps} from "./componentProps";
 import { emit } from "./componentEmit";
+import { initSlots } from "./componentSlots";
 
 export function createComponentInstance(vnode) {
     const component = {
@@ -13,27 +14,25 @@ export function createComponentInstance(vnode) {
         proxy: null,
         render: null,
         props: {},
+        slots: {},
         emit: () => {},
     };
     component.emit = emit.bind(null, component) as any;
     return component;
 }
 
-
 export function setupComponent(instance) {
 
     initProps(instance, instance.vnode.props);
+    initSlots(instance, instance.vnode.children);
     // TODO
-    // initSlots()
 
-    // 封装一下
     setupStatefulComponent(instance);
 }
 
 // 初始化有状态组件
 function setupStatefulComponent(instance) {
-    // 主逻辑是去调用setup,拿到返回值 -> 就需要拿到根组件的配置
-    // Component -> 用户定义的组件
+
     const Component = instance.type;
     // TODO proxy
     instance.proxy = new Proxy({_: instance}, PublicInstanceProxyHandlers);
@@ -45,7 +44,6 @@ function setupStatefulComponent(instance) {
             emit: instance.emit,
             // todo
         });
-
         handleSetupResult(instance, setupResult);
     }
 }
