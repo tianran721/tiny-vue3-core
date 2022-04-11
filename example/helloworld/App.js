@@ -1,28 +1,25 @@
-import {h} from "../../lib/guide-mini-vue.esm.js";
+import { h } from "../../lib/guide-mini-vue.esm.js";
 import { Foo } from "./Foo.js";
-// 通过self获取render this
-window.self = null;
-// this.$el
-// App 根组件
+
 export const App = {
-    name:"App",
-    // 假设了用户必须写render
+    name: "App",
     render() {
-        window.self = this;
-        return h("div", {
-                id: "root", class: ["red", "hard"], onClick() {
-                    console.log("click");
+        // this -> instance.proxy
+        // emit
+        return h("div", {}, [
+            h("div", {}, "App"),
+            h(Foo, {
+                onAdd(a, b) {
+                    console.log("onAdd", a, b);
                 },
-            },
-            [
-                h("div", {}, "hi," + this.msg),
-                h(Foo, {count: 1,}),
-            ]);
+                onAddFoo() {
+                    console.log("onAddFoo");
+                },
+            }),
+        ]);
     },
 
     setup() {
-        return {
-            msg: "mini-vue",
-        };
+        return {};
     },
 };

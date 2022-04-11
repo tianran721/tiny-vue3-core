@@ -6,7 +6,7 @@ export function render(vnode, container) {
     patch(vnode, container);
 }
 
-// 判断vnode的类型
+// vnode / subTree
 function patch(vnode, container) {
     const {shapeFlag} = vnode;
     // 获取
@@ -26,10 +26,10 @@ function processComponent(vnode: any, container: any) {
 }
 
 function mountComponent(initialVNode: any, container) {
-    // TODO 创建真正组件实例
     const instance = createComponentInstance(initialVNode);
 
     setupComponent(instance);
+    // TODO
 
     setupRenderEffect(instance, initialVNode, container);
 }
@@ -68,12 +68,13 @@ function mountChildren(vnode, container) {
 }
 
 function setupRenderEffect(instance, initialVNode, container) {
+
     const {proxy} = instance;
-    // todo subTree
+    // subTree -> vnode
     const subTree = instance.render.call(proxy);
-    // patch完 所有 subTree出初始化完成
+    // TODO
+
     patch(subTree, container);
 
-    // TODO *
     initialVNode.el = subTree.el;
 }
